@@ -1,16 +1,18 @@
 import {
   Button,
   ButtonGroup,
+  Chip,
   Input,
   Spacer,
   Switch,
   Textarea,
 } from "@nextui-org/react";
-import Head from "next/head";
 import { useRouter } from "next/router";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { AddUser, Delete, People, User, Document } from "react-iconly";
 import { Court } from "../src/Court";
+import { Meta } from "../src/Meta";
+import { partnerOf, removeIndexFromPairs, togglePairLink } from "../src/pairs";
 import {
   newGame,
   useShufflerDispatch,
@@ -36,6 +38,9 @@ function NewGame() {
   const [courts, setCourts] = useState(state.courts.toString());
   const [customizeCourtNames, setCustomizeCourtNames] = useState(false);
   const [courtNames, setCourtNames] = useState<string[]>([]);
+  // Fixed pairs as index pairs into `players` (ids are created on submit).
+  const [pairs, setPairs] = useState<[number, number][]>([]);
+  const [linkingIndex, setLinkingIndex] = useState<number | null>(null);
 
   const handleAddPlayers = () => {
     if (!playerInput) return;
@@ -46,29 +51,43 @@ function NewGame() {
           .map((x) => x.trim())
           .filter((x) => !!x)
       )
-    );
+    ).filter((name) => !players.includes(name));
     setPlayers((players) => [...players, ...names]);
     setPlayerInput("");
     playerInputRef.current?.focus();
   };
 
-  // Load last time's players and court names.
+  // Load last time's players, pairs, and court names.
   useEffect(() => {
-    const playerNames = [...state.players]
-      .map((id) => playersById[id].name)
-      .sort((a, b) => a.localeCompare(b));
-    setPlayers(playerNames);
+    const sortedPlayers = [...state.players]
+      .map((id) => playersById[id])
+      .sort((a, b) => a.name.localeCompare(b.name));
+    setPlayers(sortedPlayers.map(({ name }) => name));
+    const indexById = new Map(sortedPlayers.map(({ id }, index) => [id, index]));
+    setPairs(
+      state.fixedPairs
+        .filter(([a, b]) => indexById.has(a) && indexById.has(b))
+        .map(([a, b]) => [indexById.get(a)!, indexById.get(b)!])
+    );
+    setLinkingIndex(null);
     setCourts(state.courts.toString());
 
     if (state.courtNames.length) {
       setCustomizeCourtNames(true);
       setCourtNames(state.courtNames);
     }
-  }, [state.players, state.courts, state.courtNames]);
+  }, [state.players, state.courts, state.courtNames, state.fixedPairs]);
 
   const handleNewGame = async () => {
     const names = players;
     if (names.length < 4) {
+      setFormStatus("validating");
+      return;
+    }
+    if (
+      names.some((name) => !name.trim()) ||
+      new Set(names.map((x) => x.trim())).size !== names.length
+    ) {
       setFormStatus("validating");
       return;
     }
@@ -89,6 +108,7 @@ function NewGame() {
       names,
       courts: courtCount,
       courtNames: customizeCourtNames ? courtNames : [],
+      pairs,
     });
     router.push("/rounds");
   };
@@ -108,18 +128,19 @@ function NewGame() {
 
   return (
     <>
-      <Head>
-        <title>New game - Jumbled Doubles</title>
-        <meta name="description" content="Add players" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <Meta
+        title="New game - Jumbled Doubles"
+        description="Add players"
+        path="/new"
+      />
       <div className="mx-auto max-w-xl">
         <ResetPlayersModal
           open={modal === "reset-players"}
           onClose={() => setModal("none")}
           onSubmit={() => {
             setPlayers([]);
+            setPairs([]);
+            setLinkingIndex(null);
             setModal("none");
           }}
         />
@@ -179,48 +200,129 @@ function NewGame() {
                 </Button>
               </div>
               <Spacer y={2} />
-              {players.map((name, index) => (
-                <Fragment key={index}>
-                  <div className="flex items-center gap-1">
-                    <User primaryColor="#888" size="medium" />
-                    <span className="text-sm text-gray-500 w-4">
-                      {index + 1}
-                    </span>
-                    <Input
-                      className="flex-1"
-                      aria-label="Player"
-                      value={name}
-                      size="sm"
-                      type="text"
-                      variant="underlined"
-                      onChange={(e) => {
-                        const newName = e.currentTarget.value;
-                        setPlayers([
-                          ...players.slice(0, index),
-                          newName,
-                          ...players.slice(index + 1),
-                        ]);
-                      }}
-                      fullWidth
-                    />
-                    <Button
-                      variant="flat"
-                      color="default"
-                      aria-label={`Remove player named ${name}`}
-                      isIconOnly
-                      onPress={() => {
-                        // Delete this player
-                        setPlayers((players) => [
-                          ...players.slice(0, index),
-                          ...players.slice(index + 1),
-                        ]);
-                      }}
-                    >
-                      <Delete />
-                    </Button>
-                  </div>
-                </Fragment>
-              ))}
+              {linkingIndex !== null && (
+                <p className="text-sm text-primary">
+                  Select another player to pair with{" "}
+                  <span className="font-semibold">
+                    {players[linkingIndex]}
+                  </span>
+                  . Tap 🔗 again to cancel.
+                </p>
+              )}
+              {players.map((name, index) => {
+                const partnerIndex = partnerOf(index, pairs);
+                const duplicateName =
+                  formStatus === "validating" &&
+                  players.some(
+                    (other, j) => j < index && other.trim() === name.trim()
+                  );
+                const emptyName = formStatus === "validating" && !name.trim();
+                return (
+                  <Fragment key={index}>
+                    <div className="flex items-center gap-1">
+                      <User primaryColor="#888" size="medium" />
+                      <span className="text-sm text-gray-500 w-4">
+                        {index + 1}
+                      </span>
+                      <Input
+                        className="flex-1"
+                        aria-label="Player"
+                        value={name}
+                        size="sm"
+                        type="text"
+                        variant="underlined"
+                        isInvalid={duplicateName || emptyName}
+                        errorMessage={
+                          emptyName
+                            ? "Name required"
+                            : duplicateName
+                            ? "Duplicate name"
+                            : undefined
+                        }
+                        onChange={(e) => {
+                          const newName = e.currentTarget.value;
+                          setPlayers([
+                            ...players.slice(0, index),
+                            newName,
+                            ...players.slice(index + 1),
+                          ]);
+                        }}
+                        fullWidth
+                      />
+                      <Button
+                        variant={
+                          partnerIndex !== undefined || linkingIndex === index
+                            ? "solid"
+                            : "flat"
+                        }
+                        color={
+                          partnerIndex !== undefined
+                            ? "secondary"
+                            : linkingIndex === index
+                            ? "primary"
+                            : "default"
+                        }
+                        size="sm"
+                        aria-label={
+                          partnerIndex !== undefined
+                            ? `Unpair ${name} from ${players[partnerIndex]}`
+                            : `Pair ${name} with another player`
+                        }
+                        title={
+                          partnerIndex !== undefined
+                            ? "Unpair"
+                            : "Pair with another player"
+                        }
+                        isIconOnly
+                        onPress={() => {
+                          const result = togglePairLink(
+                            pairs,
+                            linkingIndex,
+                            index
+                          );
+                          setPairs(result.pairs);
+                          setLinkingIndex(result.linking);
+                        }}
+                      >
+                        🔗
+                      </Button>
+                      <Button
+                        variant="flat"
+                        color="default"
+                        aria-label={`Remove player named ${name}`}
+                        isIconOnly
+                        onPress={() => {
+                          // Delete this player and dissolve their pair.
+                          setPairs(removeIndexFromPairs(pairs, index));
+                          setLinkingIndex((linking) =>
+                            linking === null || linking === index
+                              ? null
+                              : linking > index
+                              ? linking - 1
+                              : linking
+                          );
+                          setPlayers((players) => [
+                            ...players.slice(0, index),
+                            ...players.slice(index + 1),
+                          ]);
+                        }}
+                      >
+                        <Delete />
+                      </Button>
+                    </div>
+                    {partnerIndex !== undefined && (
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        color="secondary"
+                        className="ml-10"
+                      >
+                        🔗 Paired with {players[partnerIndex]}
+                      </Chip>
+                    )}
+                  </Fragment>
+                );
+              })}
             </div>
             <Spacer y={3} />
             <label>

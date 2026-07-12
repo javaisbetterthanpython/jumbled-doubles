@@ -1,22 +1,30 @@
 import { BadgeGroup } from "./BadgeGroup";
+import { Player, PlayerId } from "./matching/types";
 import { PlayerBadge } from "./PlayerBadge";
 
 export default function TeamBadges({
   team,
   isHome,
+  pairedIds,
+  onPlayerClick,
 }: {
-  team: string[];
+  team: Player[];
   isHome?: boolean;
+  pairedIds?: Set<PlayerId>;
+  onPlayerClick?: (id: PlayerId) => void;
 }) {
-  const [player1, player2] = team;
   return (
     <BadgeGroup>
-      <PlayerBadge color={isHome ? "primary" : "secondary"}>
-        {player1}
-      </PlayerBadge>
-      <PlayerBadge color={isHome ? "primary" : "secondary"}>
-        {player2}
-      </PlayerBadge>
+      {team.map((player) => (
+        <PlayerBadge
+          key={player.id}
+          color={isHome ? "primary" : "secondary"}
+          onPress={onPlayerClick && (() => onPlayerClick(player.id))}
+        >
+          {player.name}
+          {pairedIds?.has(player.id) ? " 🔗" : ""}
+        </PlayerBadge>
+      ))}
     </BadgeGroup>
   );
 }

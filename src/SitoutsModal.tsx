@@ -9,7 +9,8 @@ import {
   ModalHeader,
 } from "@nextui-org/react";
 import { useState } from "react";
-import { PlayerId } from "./matching/heuristics";
+import { PlayerId } from "./matching/types";
+import { partnerOf, syncPairSelection } from "./pairs";
 import { useShufflerState } from "./useShuffler";
 
 export function SitoutsModal({
@@ -23,6 +24,7 @@ export function SitoutsModal({
 }) {
   const state = useShufflerState();
   const [volunteers, setVolunteers] = useState<PlayerId[]>([]);
+  const hasPairs = state.fixedPairs.length > 0;
 
   return (
     <Modal
@@ -44,16 +46,32 @@ export function SitoutsModal({
             Someone wants to sit out? Select who and reshuffle the current
             round.
           </p>
+          {hasPairs && (
+            <p className="text-sm text-neutral-500">
+              Paired players (🔗) sit out together.
+            </p>
+          )}
           <CheckboxGroup
             label="Volunteers to sit out"
             value={volunteers}
-            onValueChange={setVolunteers}
+            onValueChange={(next) =>
+              setVolunteers(syncPairSelection(volunteers, next, state.fixedPairs))
+            }
           >
-            {state.players.map((player) => (
-              <Checkbox value={player} key={player}>
-                {state.playersById[player].name}
-              </Checkbox>
-            ))}
+            {state.players.map((player) => {
+              const partner = partnerOf(player, state.fixedPairs);
+              return (
+                <Checkbox value={player} key={player}>
+                  {state.playersById[player].name}
+                  {partner ? (
+                    <span className="text-sm text-neutral-500">
+                      {" "}
+                      🔗 with {state.playersById[partner].name}
+                    </span>
+                  ) : null}
+                </Checkbox>
+              );
+            })}
           </CheckboxGroup>
         </ModalBody>
         <ModalFooter>

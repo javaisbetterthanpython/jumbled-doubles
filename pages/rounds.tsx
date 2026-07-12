@@ -6,14 +6,16 @@ import {
   CardBody,
   Divider,
 } from "@nextui-org/react";
-import Head from "next/head";
 import React, { useEffect, useState } from "react";
 import { Edit, People } from "react-iconly";
 import { BadgeGroup } from "../src/BadgeGroup";
+import { Meta } from "../src/Meta";
 import { Court } from "../src/Court";
 import { CourtsModal } from "../src/CourtsModal";
+import { PlayerId } from "../src/matching/types";
 import { PlayerBadge } from "../src/PlayerBadge";
 import { PlayersModal } from "../src/PlayersModal";
+import { RenamePlayerModal } from "../src/RenamePlayerModal";
 import { SitoutsModal } from "../src/SitoutsModal";
 import TeamBadges from "../src/TeamBadges";
 import {
@@ -33,6 +35,7 @@ export default function Rounds() {
   const [sitoutModal, setSitoutModal] = useState(false);
   const [playersModal, setPlayersModal] = useState(false);
   const [courtsModal, setCourtsModal] = useState(false);
+  const [renameId, setRenameId] = useState<PlayerId | null>(null);
 
   const [roundIndex, setRoundIndex] = useState(0);
 
@@ -53,15 +56,19 @@ export default function Rounds() {
   const playerName = (id: string) => {
     return state.playersById[id].name;
   };
+  const pairedIds = new Set(state.fixedPairs.flat());
+  const teamPlayers = (team: PlayerId[]) =>
+    team
+      .map((id) => state.playersById[id])
+      .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <>
-      <Head>
-        <title>Rounds - Jumbled Doubles</title>
-        <meta name="description" content="View player rounds" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <Meta
+        title="Rounds - Jumbled Doubles"
+        description="View player rounds"
+        path="/rounds"
+      />
       <section className="container mx-auto">
         <SitoutsModal
           key={roundIndex}
@@ -78,14 +85,19 @@ export default function Rounds() {
         <PlayersModal
           open={playersModal}
           onClose={() => setPlayersModal(false)}
-          onSubmit={async (newPlayers, regenerate) => {
+          onSubmit={async (newPlayers, fixedPairs, regenerate) => {
             await editPlayers(dispatch, state, worker, {
               newPlayers,
+              fixedPairs,
               regenerate,
             });
             if (!regenerate && roundIndex) setRoundIndex((index) => index + 1);
             setPlayersModal(false);
           }}
+        />
+        <RenamePlayerModal
+          playerId={renameId}
+          onClose={() => setRenameId(null)}
         />
         <CourtsModal
           open={courtsModal}
@@ -159,8 +171,13 @@ export default function Rounds() {
                     <Spacer y={0.5} />
                     <BadgeGroup>
                       {sitOuts.map((playerId) => (
-                        <PlayerBadge key={playerId} color="default">
+                        <PlayerBadge
+                          key={playerId}
+                          color="default"
+                          onPress={() => setRenameId(playerId)}
+                        >
                           {playerName(playerId)}
+                          {pairedIds.has(playerId) ? " 🔗" : ""}
                           {volunteers.includes(playerId) ? (
                             <span className="text-neutral-500 font-semibold text-medium">
                               {" "}
@@ -192,11 +209,20 @@ export default function Rounds() {
                       Court {state.courtNames[index] || index + 1}
                     </h4>
                     <div className="text-center">
-                      <TeamBadges team={teamA.map(playerName).sort()} isHome />
+                      <TeamBadges
+                        team={teamPlayers(teamA)}
+                        isHome
+                        pairedIds={pairedIds}
+                        onPlayerClick={setRenameId}
+                      />
                       <Spacer y={5} />
                       <div className="relative w-full border-b-1 before:px-4 before:-mx-6 before:bg-white before:-translate-y-1/2 before:font-bold before:absolute before:content-['vs']"></div>
                       <Spacer y={5} />
-                      <TeamBadges team={teamB.map(playerName).sort()} />
+                      <TeamBadges
+                        team={teamPlayers(teamB)}
+                        pairedIds={pairedIds}
+                        onPlayerClick={setRenameId}
+                      />
                       <Spacer y={1} />
                     </div>
                   </CardBody>
