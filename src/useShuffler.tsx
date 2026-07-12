@@ -274,9 +274,9 @@ async function newRound(
   state: State,
   worker: Worker | null,
   payload: NewRoundOptions
-) {
-  if (!worker) return;
-  if (state.generating) return;
+): Promise<boolean> {
+  if (!worker) return false;
+  if (state.generating) return false;
   dispatch({ type: "start-generation", payload });
   const rounds = payload.regenerate ? state.rounds.slice(0, -1) : state.rounds;
 
@@ -293,8 +293,10 @@ async function newRound(
       type: "new-round",
       payload: { round: nextRound, volunteerSitouts: payload.volunteerSitouts },
     });
+    return true;
   } catch (error) {
     dispatch({ type: "new-round-fail", payload: { error: error as Error } });
+    return false;
   }
 }
 
@@ -303,9 +305,9 @@ async function newGame(
   state: State,
   worker: Worker | null,
   payload: NewGameOptions
-) {
-  if (!worker) return;
-  if (state.generating) return;
+): Promise<boolean> {
+  if (!worker) return false;
+  if (state.generating) return false;
   const { courts, names, courtNames, pairs } = payload;
   // Resolve index pairs to ids before sorting reorders the players.
   const created = createPlayers(names);
@@ -335,8 +337,10 @@ async function newGame(
       fixedPairs
     );
     dispatch({ type: "new-game", payload: nextRound });
+    return true;
   } catch (error) {
     dispatch({ type: "new-game-fail", payload: { error: error as Error } });
+    return false;
   }
 }
 
@@ -370,9 +374,9 @@ async function editCourts(
   state: State,
   worker: Worker | null,
   payload: EditCourts
-) {
-  if (!worker) return;
-  if (state.generating) return;
+): Promise<boolean> {
+  if (!worker) return false;
+  if (state.generating) return false;
   const { courts, regenerate } = payload;
   const volunteerSitouts = regenerate
     ? state.volunteerSitoutsByRound.slice(-1)[0]
@@ -400,8 +404,10 @@ async function editCourts(
         courts,
       },
     });
+    return true;
   } catch (error) {
     dispatch({ type: "new-round-fail", payload: { error: error as Error } });
+    return false;
   }
 }
 
@@ -410,9 +416,9 @@ async function editPlayers(
   state: State,
   worker: Worker | null,
   payload: EditPlayers
-) {
-  if (!worker) return;
-  if (state.generating) return;
+): Promise<boolean> {
+  if (!worker) return false;
+  if (state.generating) return false;
   const { newPlayers, regenerate } = payload;
   const volunteerSitouts = regenerate
     ? state.volunteerSitoutsByRound.slice(-1)[0]
@@ -450,8 +456,10 @@ async function editPlayers(
         volunteerSitouts,
       },
     });
+    return true;
   } catch (error) {
     dispatch({ type: "new-round-fail", payload: { error: error as Error } });
+    return false;
   }
 }
 

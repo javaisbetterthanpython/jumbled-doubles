@@ -78,7 +78,11 @@ export function SitoutsModal({
           <Button variant="flat" onPress={onClose}>
             Cancel
           </Button>
-          <Button onPress={() => onSubmit(volunteers)} color="primary">
+          <Button
+            onPress={() => onSubmit(volunteers)}
+            color="primary"
+            isLoading={state.generating}
+          >
             Re-jumble!
           </Button>
         </ModalFooter>

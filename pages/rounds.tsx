@@ -75,22 +75,23 @@ export default function Rounds() {
           open={sitoutModal}
           onClose={() => setSitoutModal(false)}
           onSubmit={async (volunteerSitouts) => {
-            await newRound(dispatch, state, worker, {
+            const started = await newRound(dispatch, state, worker, {
               regenerate: true,
               volunteerSitouts,
             });
-            setSitoutModal(false);
+            if (started) setSitoutModal(false);
           }}
         />
         <PlayersModal
           open={playersModal}
           onClose={() => setPlayersModal(false)}
           onSubmit={async (newPlayers, fixedPairs, regenerate) => {
-            await editPlayers(dispatch, state, worker, {
+            const started = await editPlayers(dispatch, state, worker, {
               newPlayers,
               fixedPairs,
               regenerate,
             });
+            if (!started) return;
             if (!regenerate && roundIndex) setRoundIndex((index) => index + 1);
             setPlayersModal(false);
           }}
@@ -103,10 +104,11 @@ export default function Rounds() {
           open={courtsModal}
           onClose={() => setCourtsModal(false)}
           onSubmit={async (courts, regenerate) => {
-            await editCourts(dispatch, state, worker, {
+            const started = await editCourts(dispatch, state, worker, {
               regenerate,
               courts,
             });
+            if (!started) return;
             if (!regenerate && roundIndex) setRoundIndex((index) => index + 1);
             setCourtsModal(false);
           }}
@@ -245,10 +247,12 @@ export default function Rounds() {
         <div className="flex justify-around">
           <Button
             size="lg"
+            isLoading={state.generating}
             onPress={async () => {
-              await newRound(dispatch, state, worker, {
+              const started = await newRound(dispatch, state, worker, {
                 volunteerSitouts: [],
               });
+              if (!started) return;
               setRoundIndex(state.rounds.length);
               window.scrollTo(0, 0);
             }}

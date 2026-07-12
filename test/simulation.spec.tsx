@@ -139,7 +139,12 @@ const roundTo = (value: number, places = 2) =>
   Math.round(value * 10 ** places) / 10 ** places;
 
 describe("partner variety simulation", () => {
-  const configs = [
+  const configs: Array<{
+    players: number;
+    courts: number;
+    rounds: number;
+    maxRepeatBar?: number;
+  }> = [
     // Ample courts: sit-outs only from remainder.
     ...[8, 9, 10, 12, 16].map((n) => ({
       players: n,

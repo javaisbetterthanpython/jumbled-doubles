@@ -68,12 +68,14 @@ export function CourtsModal({
           <Button
             onPress={() => onSubmit(parseInt(courts), true)}
             color="danger"
+            isDisabled={state.generating}
           >
             Redo round
           </Button>
           <Button
             onPress={() => onSubmit(parseInt(courts), false)}
             color="primary"
+            isLoading={state.generating}
           >
             New round
           </Button>

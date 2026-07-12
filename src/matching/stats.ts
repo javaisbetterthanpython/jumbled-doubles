@@ -55,13 +55,16 @@ export function buildStats(rounds: Round[], players: PlayerId[]): Stats {
   const lateJoiners = new Set<PlayerId>();
   const see = (player: PlayerId, roundIndex: number) => {
     if (seen.has(player)) return;
-    seen.add(player);
     if (roundIndex > 0) {
-      const counts = [...runningSitOuts.values()];
+      // Least-rested is the min over ALL players seen so far — players who
+      // have never sat out count as 0, otherwise an early-session joiner
+      // would be credited an extra rotation at the regulars' expense.
+      const counts = [...seen].map((p) => runningSitOuts.get(p) ?? 0);
       const least = counts.length ? Math.min(...counts) : 0;
       runningSitOuts.set(player, least + 1);
       lateJoiners.add(player);
     }
+    seen.add(player);
   };
 
   rounds.forEach((round, roundIndex) => {

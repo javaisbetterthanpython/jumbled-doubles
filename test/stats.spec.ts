@@ -91,6 +91,25 @@ describe("buildStats()", () => {
     expect(stats.roundsSinceSitOut[late]).toBe(Infinity);
   });
 
+  test("late joiner credit counts never-sat players as least-rested", () => {
+    // One round in, only "a" has sat out; b–e are at zero. A new player must
+    // be credited 0 + 1 = 1, not min-of-sitters + 1 = 2 (which would exempt
+    // them from a whole rotation at the regulars' expense).
+    const rounds: Round[] = [
+      {
+        matches: [
+          [
+            ["b", "c"],
+            ["d", "e"],
+          ],
+        ],
+        sitOuts: ["a"],
+      },
+    ];
+    const stats = buildStats(rounds, ["a", "b", "c", "d", "e", "f"]);
+    expect(stats.sitOutCount[stats.index.get("f")!]).toBe(1);
+  });
+
   test("late joiner credit persists once they play", () => {
     const everyoneSatOutOnceOrTwice = [...sampleRounds, sampleRounds[0]];
     const newPlayers = [...samplePlayers, "late"];

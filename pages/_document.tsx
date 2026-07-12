@@ -22,7 +22,6 @@ class MyDocument extends Document {
             content="default"
           />
           <meta name="apple-mobile-web-app-title" content="Jumbled Doubles" />
-          <meta name="description" content="Social doubles play made fair." />
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
           <meta name="msapplication-config" content="/browserconfig.xml" />

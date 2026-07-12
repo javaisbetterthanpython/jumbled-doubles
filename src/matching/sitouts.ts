@@ -41,14 +41,49 @@ export function pickSitOuts(
       sitOutPolicy.unitSitOutCount(b, stats)
   );
 
+  // Can `slots` be filled exactly from `pairs` pair-units and `singles`
+  // single-units? (Pairs only fill even amounts.)
+  const canFill = (slots: number, pairs: number, singles: number): boolean =>
+    slots === 0 ||
+    (slots <= 2 * pairs + singles && (slots % 2 === 0 || singles >= 1));
+
   const sitting: Unit[] = [];
   const activeUnits: Unit[] = [];
-  for (const unit of ordered) {
-    if (unit.members.length <= remaining) {
-      sitting.push(unit);
-      remaining -= unit.members.length;
-    } else {
-      activeUnits.push(unit);
+  let index = 0;
+  while (index < ordered.length) {
+    // Walk one fairness tier (equal sit-out count) at a time. When the tier
+    // can fill the remaining slots exactly, a unit is only taken if the rest
+    // of the tier can still complete the fill — otherwise a random tied
+    // single could crowd out an equally-owed pair and force a player from a
+    // higher tier to sit (a fairness violation). Tiers that cannot complete
+    // the fill are drained greedily and the walk dips into the next tier.
+    const tierCount = sitOutPolicy.unitSitOutCount(ordered[index], stats);
+    const tier: Unit[] = [];
+    while (
+      index < ordered.length &&
+      sitOutPolicy.unitSitOutCount(ordered[index], stats) === tierCount
+    ) {
+      tier.push(ordered[index]);
+      index += 1;
+    }
+    let pairsLeft = tier.filter((unit) => unit.members.length === 2).length;
+    let singlesLeft = tier.length - pairsLeft;
+    const tierCanFill = canFill(remaining, pairsLeft, singlesLeft);
+    for (const unit of tier) {
+      const size = unit.members.length;
+      const pairsAfter = pairsLeft - (size === 2 ? 1 : 0);
+      const singlesAfter = singlesLeft - (size === 1 ? 1 : 0);
+      const take =
+        size <= remaining &&
+        (!tierCanFill || canFill(remaining - size, pairsAfter, singlesAfter));
+      if (take) {
+        sitting.push(unit);
+        remaining -= size;
+      } else {
+        activeUnits.push(unit);
+      }
+      pairsLeft = pairsAfter;
+      singlesLeft = singlesAfter;
     }
   }
 

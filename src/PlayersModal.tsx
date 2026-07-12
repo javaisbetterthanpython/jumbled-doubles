@@ -50,6 +50,9 @@ export function PlayersModal({
       // TODO: error handling for too few players.
       if (newPlayers.length < 4) return;
       if (newPlayers.some(({ name }) => !name)) return;
+      // The offending rows already show a "Duplicate name" error.
+      if (new Set(newPlayers.map(({ name }) => name)).size !== newPlayers.length)
+        return;
       onSubmit(
         newPlayers,
         sanitizePairs(
@@ -207,8 +210,13 @@ export function PlayersModal({
                   <Input
                     aria-label={`Player name for ${player.name}`}
                     className={clsx("flex-1", {
-                      "line-through opacity-50": player.delete,
+                      "opacity-50": player.delete,
                     })}
+                    classNames={{
+                      // text-decoration doesn't inherit into form controls;
+                      // strike the input's own text slot.
+                      input: clsx({ "line-through": player.delete }),
+                    }}
                     size="sm"
                     type="text"
                     variant="underlined"
@@ -288,10 +296,18 @@ export function PlayersModal({
           <Button variant="flat" onPress={onClose}>
             Cancel
           </Button>
-          <Button onPress={handleSubmit(true)} color="danger">
+          <Button
+            onPress={handleSubmit(true)}
+            color="danger"
+            isDisabled={state.generating}
+          >
             Redo round
           </Button>
-          <Button onPress={handleSubmit()} color="primary">
+          <Button
+            onPress={handleSubmit()}
+            color="primary"
+            isLoading={state.generating}
+          >
             New round
           </Button>
         </ModalFooter>

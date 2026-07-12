@@ -1,6 +1,9 @@
 import { getNextBestRound } from "../src/matching";
-import { normalizeFixedPairs } from "../src/matching/fixedPairs";
-import { PlayerId, Round, Team } from "../src/matching/types";
+import { scoreRound } from "../src/matching/cost";
+import { buildUnits, normalizeFixedPairs } from "../src/matching/fixedPairs";
+import { pickSitOuts } from "../src/matching/sitouts";
+import { buildStats, teamKey } from "../src/matching/stats";
+import { Match, PlayerId, Round, Team } from "../src/matching/types";
 
 const names = (count: number) =>
   Array.from({ length: count }, (_, i) => `p${i}`);
@@ -146,6 +149,67 @@ describe("fixed pairs", () => {
       expect(round.sitOuts).toHaveLength(0);
     });
   }, 30_000);
+
+  test("equally-owed pair is never crowded out by a tied single", () => {
+    // 7 players, 1 court, 3 sit per round. After round 1 the pair and two
+    // singles have never sat. Every fair fill seats the pair plus one
+    // never-sat single; seating both singles would strand one slot for a
+    // once-sat player. Regardless of random tie order, no once-sat player
+    // may sit again.
+    const players = ["p0", "p1", "s0", "s1", "s2", "s3", "s4"];
+    const rounds: Round[] = [
+      {
+        matches: [
+          [
+            ["p0", "p1"],
+            ["s0", "s4"],
+          ],
+        ],
+        sitOuts: ["s1", "s2", "s3"],
+      },
+    ];
+    const stats = buildStats(rounds, players);
+    const units = buildUnits(players, [["p0", "p1"]]);
+    for (let trial = 0; trial < 30; trial++) {
+      const { sitOuts } = pickSitOuts(units, stats, 1, []);
+      expect(sitOuts).toHaveLength(3);
+      expect(sitOuts).toContain("p0");
+      expect(sitOuts).toContain("p1");
+      const third = sitOuts.find((p) => p !== "p0" && p !== "p1");
+      expect(["s0", "s4"]).toContain(third);
+    }
+  });
+
+  test("fixed pairs are exempt from partner-repeat scoring", () => {
+    const players = ["a", "b", "c", "d"];
+    const rounds: Round[] = [
+      {
+        matches: [
+          [
+            ["a", "b"],
+            ["c", "d"],
+          ],
+        ],
+        sitOuts: [],
+      },
+    ];
+    const stats = buildStats(rounds, players);
+    const teams: Team[] = [
+      ["a", "b"],
+      ["c", "d"],
+    ];
+    const matches: Match[] = [
+      [
+        ["a", "b"],
+        ["c", "d"],
+      ],
+    ];
+    const exempt = scoreRound(teams, matches, stats, new Set([teamKey("a", "b")]));
+    const unexempt = scoreRound(teams, matches, stats, new Set());
+    // Tuple layout: [rematches, partnerRepeats, ...]
+    expect(exempt[1]).toBe(1); // only c+d's repeat counts
+    expect(unexempt[1]).toBe(2);
+  });
 
   test("singles' variety is not degraded by the pair", async () => {
     // 12 players, 1 pair: the 10 singles should still avoid repeating
