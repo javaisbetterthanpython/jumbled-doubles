@@ -152,9 +152,13 @@ describe("partner variety simulation", () => {
     // Long sessions: repeats are forced; quality = spacing them out.
     { players: 8, courts: 2, rounds: 20 },
     { players: 9, courts: 2, rounds: 20 },
+    // Full house: 19 distinct partners exist, so even a 15-round night
+    // should produce zero repeat partners (measured: worstMaxPartner 1,
+    // ~9ms/round; repeats only become forced from round 20).
+    { players: 20, courts: 5, rounds: 15, maxRepeatBar: 1 },
   ];
 
-  for (const { players, courts, rounds } of configs) {
+  for (const { players, courts, rounds, maxRepeatBar } of configs) {
     test(
       `${players} players, ${courts} courts, ${rounds} rounds × ${RUNS} runs`,
       async () => {
@@ -188,7 +192,7 @@ describe("partner variety simulation", () => {
         // Calibrated on the rewrite (see header table): repeats stay at the
         // pigeonhole optimum and identical matches essentially never replay.
         expect(summary.worstMaxPartnerCount).toBeLessThanOrEqual(
-          rounds > 10 ? 3 : 2
+          maxRepeatBar ?? (rounds > 10 ? 3 : 2)
         );
         expect(summary.exactRematches).toBeLessThanOrEqual(0.5);
         expect(summary.prematureRepeats).toBeLessThanOrEqual(0.5);

@@ -17,7 +17,13 @@ export function shuffle<T>(input: T[]): T[] {
   return array;
 }
 
-/** Exact search is used up to this many items: (15)!! = 2,027,025 matchings. */
+/**
+ * Exact search is used up to this many items: (15)!! = 2,027,025 matchings.
+ * Measured note: raising this to 20 makes 20-player sessions WORSE at the
+ * 19-round frontier (deterministic optima reduce candidate diversity, so the
+ * loop explores fewer distinct zero-repeat matchings) and ~6× slower — the
+ * stochastic path's random restarts are a feature there, not a fallback.
+ */
 const EXACT_LIMIT = 16;
 /** Safety cap on branch-and-bound nodes (adversarial cost surfaces only). */
 const NODE_CAP = 200_000;
