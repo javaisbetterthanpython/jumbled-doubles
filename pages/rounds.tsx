@@ -15,6 +15,7 @@ import { CourtsModal } from "../src/CourtsModal";
 import { PlayerId } from "../src/matching/types";
 import { PlayerBadge } from "../src/PlayerBadge";
 import { PlayersModal } from "../src/PlayersModal";
+import { RenameCourtModal } from "../src/RenameCourtModal";
 import { RenamePlayerModal } from "../src/RenamePlayerModal";
 import { SitoutsModal } from "../src/SitoutsModal";
 import TeamBadges from "../src/TeamBadges";
@@ -36,6 +37,7 @@ export default function Rounds() {
   const [playersModal, setPlayersModal] = useState(false);
   const [courtsModal, setCourtsModal] = useState(false);
   const [renameId, setRenameId] = useState<PlayerId | null>(null);
+  const [renameCourtIndex, setRenameCourtIndex] = useState<number | null>(null);
 
   const [roundIndex, setRoundIndex] = useState(0);
 
@@ -100,6 +102,10 @@ export default function Rounds() {
           playerId={renameId}
           onClose={() => setRenameId(null)}
         />
+        <RenameCourtModal
+          courtIndex={renameCourtIndex}
+          onClose={() => setRenameCourtIndex(null)}
+        />
         <CourtsModal
           open={courtsModal}
           onClose={() => setCourtsModal(false)}
@@ -130,7 +136,7 @@ export default function Rounds() {
                 {state.players.length}
               </Button>
               <Button
-                aria-label={`${state.players.length} players`}
+                aria-label={`${state.courts} courts`}
                 startContent={<Court />}
                 className="-mt-2"
                 color="primary"
@@ -208,7 +214,14 @@ export default function Rounds() {
                 <Card>
                   <CardBody>
                     <h4 className="text-lg font-semibold mb-2">
-                      Court {state.courtNames[index] || index + 1}
+                      <button
+                        type="button"
+                        className="cursor-pointer"
+                        title="Tap to rename court"
+                        onClick={() => setRenameCourtIndex(index)}
+                      >
+                        Court {state.courtNames[index] || index + 1}
+                      </button>
                     </h4>
                     <div className="text-center">
                       <TeamBadges

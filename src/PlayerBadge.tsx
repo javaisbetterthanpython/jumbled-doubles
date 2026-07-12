@@ -23,10 +23,7 @@ export function PlayerBadge({
     return (
       <button
         type="button"
-        className={clsx(
-          className,
-          "cursor-pointer underline decoration-dotted underline-offset-4"
-        )}
+        className={clsx(className, "cursor-pointer")}
         title="Tap to rename"
         onClick={onPress}
       >

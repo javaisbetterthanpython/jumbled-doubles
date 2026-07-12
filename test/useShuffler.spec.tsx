@@ -48,6 +48,19 @@ describe("shufflerReducer", () => {
     });
   });
 
+  describe("set-court-names", () => {
+    test("updates trimmed names, preserves rounds and roster", () => {
+      const state = baseState({ courts: 2, courtNames: [] });
+      const next = shufflerReducer(state, {
+        type: "set-court-names",
+        payload: { courtNames: [" Centre ", "Back "] },
+      });
+      expect(next.courtNames).toEqual(["Centre", "Back"]);
+      expect(next.players).toEqual(state.players);
+      expect(next.rounds).toEqual(state.rounds);
+    });
+  });
+
   describe("fixed pairs state", () => {
     test("new-game-start replaces pairs and resets rounds", () => {
       const pairs: Team[] = [["id-a", "id-b"]];

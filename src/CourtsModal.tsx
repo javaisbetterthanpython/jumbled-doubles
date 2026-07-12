@@ -9,9 +9,8 @@ import {
   Spacer,
 } from "@nextui-org/react";
 import { useEffect, useState } from "react";
-import { Home } from "react-iconly";
 import { Court } from "./Court";
-import { useShufflerState } from "./useShuffler";
+import { useShufflerDispatch, useShufflerState } from "./useShuffler";
 
 export function CourtsModal({
   open,
@@ -23,16 +22,41 @@ export function CourtsModal({
   onSubmit: (newCourtCount: number, regenerate: boolean) => void;
 }) {
   const state = useShufflerState();
+  const dispatch = useShufflerDispatch();
   const [courts, setCourts] = useState<string>(state.courts.toString());
+  const [names, setNames] = useState<string[]>([]);
+
   useEffect(() => {
     if (open) {
       setCourts(state.courts.toString());
+      setNames(
+        Array.from(
+          { length: state.courts },
+          (_, i) => state.courtNames[i] || `${i + 1}`
+        )
+      );
     }
   }, [open]);
+
+  const renameCourt = (index: number, name: string) => {
+    const next = [...names];
+    next[index] = name;
+    setNames(next);
+    // Names are display labels only, so valid changes save immediately —
+    // no regeneration, mirroring live player renames.
+    const trimmedAll = next.map((n) => n.trim());
+    const valid =
+      trimmedAll.every((n) => n) &&
+      new Set(trimmedAll).size === trimmedAll.length;
+    if (valid) {
+      dispatch({ type: "set-court-names", payload: { courtNames: trimmedAll } });
+    }
+  };
 
   return (
     <Modal
       closeButton
+      scrollBehavior="inside"
       aria-labelledby="courts-modal-title"
       isOpen={open}
       onClose={() => {
@@ -60,6 +84,36 @@ export function CourtsModal({
               fullWidth
             />
           </label>
+          <Spacer y={2} />
+          <p className="text-sm text-neutral-500">
+            Court names save immediately. Changing the number of courts takes
+            effect when you redo or start a round.
+          </p>
+          {names.map((name, index) => {
+            const trimmed = name.trim();
+            const duplicate = names.some(
+              (other, i) => i !== index && other.trim() === trimmed
+            );
+            return (
+              <Input
+                key={index}
+                label={`Court ${index + 1} name`}
+                labelPlacement="outside-left"
+                size="sm"
+                variant="underlined"
+                value={name}
+                isInvalid={!trimmed || duplicate}
+                errorMessage={
+                  !trimmed
+                    ? "Court name required"
+                    : duplicate
+                    ? "Duplicate court name"
+                    : undefined
+                }
+                onChange={(e) => renameCourt(index, e.target.value)}
+              />
+            );
+          })}
         </ModalBody>
         <ModalFooter>
           <Button variant="flat" onPress={onClose}>

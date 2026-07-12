@@ -49,6 +49,10 @@ type Action =
       payload: { id: PlayerId; name: string };
     }
   | {
+      type: "set-court-names";
+      payload: { courtNames: string[] };
+    }
+  | {
       type: "new-game";
       payload: Round;
     }
@@ -221,6 +225,14 @@ function shufflerReducer(state: State, action: Action): State {
           ...state.playersById,
           [id]: { ...state.playersById[id], name: trimmed },
         },
+      });
+    }
+    case "set-court-names": {
+      // Court names are display labels only (matches are indexed by court
+      // position), so renaming never requires regeneration.
+      return cacheState({
+        ...state,
+        courtNames: action.payload.courtNames.map((name) => name.trim()),
       });
     }
     case "new-game": {
