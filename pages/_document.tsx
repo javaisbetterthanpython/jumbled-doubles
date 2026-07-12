@@ -25,10 +25,7 @@ class MyDocument extends Document {
           <meta name="description" content="Social doubles play made fair." />
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
-          <meta
-            name="msapplication-config"
-            content="/icons/browserconfig.xml"
-          />
+          <meta name="msapplication-config" content="/browserconfig.xml" />
           <meta name="msapplication-TileColor" content="#3372F4" />
           <meta name="msapplication-tap-highlight" content="no" />
           <meta name="theme-color" content="#3372F4" />
@@ -52,8 +49,6 @@ class MyDocument extends Document {
           />
           <link rel="manifest" href="/site.webmanifest" />
           <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5" />
-          <meta name="msapplication-TileColor" content="#da532c" />
-          <meta name="theme-color" content="#3372F4" />
         </Head>
         <body>
           <Main />

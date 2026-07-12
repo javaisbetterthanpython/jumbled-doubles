@@ -1,19 +1,15 @@
 import { Button, Link, Spacer } from "@nextui-org/react";
-import Head from "next/head";
+import { Meta } from "../src/Meta";
 import { ResumeActiveGame } from "../src/ResumeActiveGame";
 
 export default function Home() {
   return (
     <>
-      <Head>
-        <title>Jumbled Doubles</title>
-        <meta
-          name="description"
-          content="Fair random doubles play for any activity that's played in teams of two."
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <Meta
+        title="Jumbled Doubles"
+        description="Fair random doubles play for any activity that's played in teams of two."
+        path="/"
+      />
       <section className="container">
         <Spacer y={1} />
         <div className="flex flex-col">
@@ -67,26 +63,16 @@ export default function Home() {
 
           <Spacer y={8} />
 
-          <h3 className="text-xl font-semibold mb-2">Beta</h3>
-          <p>
-            <span className="font-bold text-primary">
-              Jumbled Doubles is new!
-            </span>{" "}
-            New features are{" "}
-            <Link
-              color="primary"
-              href="https://github.com/morinted/pickleball-shuffler/issues"
-            >
-              planned
-            </Link>{" "}
-            and the shuffling may not be perfect.
-          </p>
+          <h3 className="text-xl font-semibold mb-2">Feedback</h3>
           <p>
             If you find <span className="text-danger font-bold">problems</span>{" "}
-            or have <span className="text-secondary font-bold">feedback</span>{" "}
-            then please send an email to{" "}
-            <Link color="primary" href="mailto:jumbled@ted.mozmail.com">
-              jumbled@ted.mozmail.com
+            or have <span className="text-secondary font-bold">feedback</span>,
+            open an issue on{" "}
+            <Link
+              color="primary"
+              href="https://github.com/javaisbetterthanpython/jumbled-doubles/issues"
+            >
+              GitHub
             </Link>
           </p>
         </div>

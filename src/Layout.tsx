@@ -70,9 +70,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <br />
                 Doubles
               </div>
-              <div className="text-secondary px-1 ml-3 h-min text-xs font-bold border-secondary border-2 rounded">
-                Beta
-              </div>
             </div>
           </Link>
         </NavbarBrand>
