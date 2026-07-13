@@ -335,7 +335,13 @@ function NewGame() {
                   How many courts are available?{" "}
                   <span className="italic text-gray-500">
                     {Math.floor(players.length / 4) ? (
-                      <>Enough players for {Math.floor(players.length / 4)}</>
+                      <>
+                        Your {players.length} players can fill{" "}
+                        {Math.floor(players.length / 4)}{" "}
+                        {Math.floor(players.length / 4) === 1
+                          ? "court"
+                          : "courts"}
+                      </>
                     ) : (
                       ""
                     )}

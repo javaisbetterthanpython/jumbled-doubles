@@ -41,7 +41,8 @@ export default function Home() {
             <ul className="list-disc list-inside mt-1">
               <li>
                 A smarter shuffler — fewer repeat partners, fairer sit-outs,
-                and no replayed matchups
+                and no replayed matchups until every combination has been
+                played
               </li>
               <li>
                 Fixed teams — link two players (🔗) so they always play
