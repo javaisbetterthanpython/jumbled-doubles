@@ -68,9 +68,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   Jumbled
                 </div>
                 <br />
-                Doubles
-                <span style={{ fontSize: "0.65em", color: "#d52b1e" }}>
-                  .ca
+                <span style={{ position: "relative" }}>
+                  Doubles
+                  {/* Out of flow so the centered wordmark keeps the original
+                      Jumbled-over-Doubles geometry. */}
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: "100%",
+                      bottom: 0,
+                      fontSize: "0.65em",
+                      color: "#d52b1e",
+                    }}
+                  >
+                    .ca
+                  </span>
                 </span>
               </div>
               <div
