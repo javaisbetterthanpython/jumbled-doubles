@@ -24,6 +24,32 @@ export default function Home() {
             Fairly shuffle doubles games so that you play with and against
             everyone.
           </p>
+          <Spacer y={4} />
+          <div className="border-l-4 border-[#d52b1e] bg-red-50 rounded-r-lg px-4 py-3 text-sm">
+            <p>
+              <span className="font-bold">🇨🇦 The Canadian edition.</span> A
+              new, enhanced version of the original{" "}
+              <Link
+                color="primary"
+                className="text-sm"
+                href="https://jumbleddoubles.com"
+              >
+                Jumbled Doubles
+              </Link>{" "}
+              by Ted Morin, rebuilt with:
+            </p>
+            <ul className="list-disc list-inside mt-1">
+              <li>
+                A smarter shuffler — fewer repeat partners, fairer sit-outs,
+                and no replayed matchups
+              </li>
+              <li>
+                Fixed teams — link two players (🔗) so they always play
+                together
+              </li>
+              <li>Live editing — rename players and courts mid-game</li>
+            </ul>
+          </div>
           <Spacer y={8} />
           <h3 className="text-xl font-semibold mb-2">Why jumble?</h3>
           <p className="mb-1">

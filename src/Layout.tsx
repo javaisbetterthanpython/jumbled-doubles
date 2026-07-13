@@ -69,6 +69,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 <br />
                 Doubles
+                <span style={{ fontSize: "0.65em", color: "#d52b1e" }}>
+                  .ca
+                </span>
+              </div>
+              <div
+                className="ml-3 text-2xl"
+                title="The Canadian edition"
+                aria-label="Canadian edition"
+              >
+                🇨🇦
               </div>
             </div>
           </Link>
